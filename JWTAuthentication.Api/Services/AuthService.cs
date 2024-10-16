@@ -9,9 +9,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace JWTAuthentication.Api.Services;
 
-public class AuthService(UserManager<ApplicationUser> userManager, IOptions<Jwt> jwt) : IAuthService
+public class AuthService(
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager,
+    IOptions<Jwt> jwt) : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+
     private readonly Jwt _jwt = jwt.Value;
 
 
@@ -74,6 +79,20 @@ public class AuthService(UserManager<ApplicationUser> userManager, IOptions<Jwt>
         authModel.Roles = rolesList.ToList();
 
         return authModel;
+    }
+
+    public async Task<string> AddRoleAsync(AddRoleModel model)
+    {
+        if (await _userManager.FindByIdAsync(model.UserId) is not { } user ||
+            !await _roleManager.RoleExistsAsync(model.Role))
+            return "Invalid user Id or password Role";
+
+        if (await _userManager.IsInRoleAsync(user, model.Role))
+            return "User already assigned to this role!";
+
+        var result = await _userManager.AddToRoleAsync(user, model.Role);
+
+        return result.Succeeded ? string.Empty : "something went wrong!";
     }
 
 
