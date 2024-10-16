@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace JWTAuthentication.Api.Models;
 
-public abstract class RegisterModel
+public class RegisterModel
 {
     [StringLength(100)] public string FirstName { get; set; } = null!;
 
