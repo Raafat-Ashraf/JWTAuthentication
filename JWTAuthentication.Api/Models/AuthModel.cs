@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace JWTAuthentication.Api.Models;
 
 public class AuthModel
@@ -8,5 +10,10 @@ public class AuthModel
     public string Email { get; set; } = null!;
     public List<string> Roles { get; set; } = null!;
     public string Token { get; set; } = null!;
-    public DateTime ExpiresOn { get; set; }
+
+    // public DateTime ExpiresOn { get; set; }
+
+    [JsonIgnore] public string? RefreshToken { get; set; }
+    public DateTime RefreshTokenExpiration { get; set; }
+
 }
