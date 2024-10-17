@@ -17,6 +17,8 @@ public class AuthController(IAuthService service) : ControllerBase
     {
         var result = await _service.RegisterAsync(model);
 
+        SetRefreshTokens(result.RefreshToken!, result.RefreshTokenExpiration);
+
         return result.IsAuthenticated ? Ok(result) : BadRequest(result.Message);
     }
 
@@ -40,6 +42,35 @@ public class AuthController(IAuthService service) : ControllerBase
 
         return string.IsNullOrEmpty(result) ? Ok(model) : BadRequest(result);
     }
+
+
+    [HttpGet("refreshToken")]
+    public async Task<IActionResult> RefreshToken()
+    {
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            return BadRequest("Invalid refresh token");
+
+        var result = await _service.RefreshTokenAsync(refreshToken);
+
+        if (!string.IsNullOrEmpty(result.RefreshToken))
+            SetRefreshTokens(result.RefreshToken, result.RefreshTokenExpiration);
+
+        return result.IsAuthenticated ? Ok(result) : BadRequest(result.Message);
+    }
+
+
+    [HttpPost("revokeToken")]
+    public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenModel model)
+    {
+        var token = model.Token ?? Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(token))
+            return BadRequest("Invalid refresh token");
+
+        var result = await _service.RevokeTokenAsync(token);
+
+        return result ? Ok(result) : BadRequest("Token is invalid!");
+    }
+
 
     private void SetRefreshTokens(string refreshToken, DateTime expires)
     {
